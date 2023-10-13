@@ -1,19 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.EventSystems;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class Game_of_LIfe : MonoBehaviour
+public class MainMenu : MonoBehaviour
 {
     public GameObject cellPrefab;
-    public GameManager gameManager;
-    public Slider zoom;
-    public Slider speed;
     Cell[,] cells;
     float cellSize = 0.5f;
     int numberofColumns, numberofRows;
-    int spawnChancePercentage = 30;
+    int spawnChancePercentage = 25;
 
     public const bool Alive = true;
     public const bool Dead = false;
@@ -21,11 +16,12 @@ public class Game_of_LIfe : MonoBehaviour
     void Start()
     {
         QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 16;
 
         Camera mainCamera = Camera.main;
 
         float cameraHeight = mainCamera.orthographicSize * 2;
-        float cameraWidth =  cameraHeight * mainCamera.aspect;
+        float cameraWidth = cameraHeight * mainCamera.aspect;
 
         numberofColumns = Mathf.FloorToInt(cameraWidth / cellSize);
         numberofRows = Mathf.FloorToInt(cameraHeight / cellSize);
@@ -59,19 +55,9 @@ public class Game_of_LIfe : MonoBehaviour
 
     void Update()
     {
-        Camera.main.orthographicSize = zoom.value;
-        Application.targetFrameRate = (int)speed.value;
-
-        if (!gameManager.isPaused)
-        {
-            UpdateCells();
-            OnMouseClick();
-        }
-        else
-        {
-            OnMouseClick();
-        }
+        UpdateCells();
     }
+
     void UpdateCells()
     {
         bool[,] newCellStates = new bool[numberofColumns, numberofRows];
@@ -127,56 +113,25 @@ public class Game_of_LIfe : MonoBehaviour
         }
     }
 
-    public void OnMouseClick()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-            mousePosition -= Camera.main.transform.position;
-
-            int cellX = Mathf.FloorToInt((mousePosition.x + (numberofColumns * cellSize) * 0.5f) / cellSize);
-            int cellY = numberofRows - 1 - Mathf.FloorToInt((mousePosition.y + (numberofRows * cellSize) * 0.5f) / cellSize);
-
-            if (cellX >= 0 && cellX < numberofColumns && cellY >= 0 && cellY < numberofRows)
-            {
-                cells[cellX, cellY].alive = !cells[cellX, cellY].alive;
-                cells[cellX, cellY].UpdateStatus();
-            }
-        }
-    }
-
     int CountAliveNeighbors(int x, int y)
     {
         int count = 0;
-        int[] directionX = { -1, -1, -1, 0, 0, 1, 1, 1 };
-        int[] directionY = { -1, 0, 1, -1, 1, -1, 0, 1 };
+        int[] dx = { -1, -1, -1, 0, 0, 1, 1, 1 };
+        int[] dy = { -1, 0, 1, -1, 1, -1, 0, 1 };
 
         for (int i = 0; i < 8; i++)
         {
-            int newX = x + directionX[i];
-            int newY = y + directionY[i];
+            int newX = x + dx[i];
+            int newY = y + dy[i];
 
             if (newX >= 0 && newX < numberofColumns && newY >= 0 && newY < numberofRows)
             {
                 if (cells[newX, newY].alive)
-                {   
+                {
                     count++;
                 }
             }
         }
         return count;
-    }
-
-    public void ClearAllCells()
-    {
-        for (int y = 0; y < numberofRows; y++)
-        {
-            for (int x = 0; x < numberofColumns; x++)
-            {
-                cells[x, y].alive = Dead;
-                cells[x, y].UpdateStatus();
-            }
-        }
     }
 }
